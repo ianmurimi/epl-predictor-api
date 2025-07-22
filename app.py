@@ -3,7 +3,7 @@ import joblib
 import numpy as np
 
 # Load trained model
-model = joblib.load('/Users/ianmurimi/Documents/Practice/ML/EPL_Pred/match_predictor_xgb.pkl')
+model = joblib.load('/Users/ianmurimi/Documents/Practice/ML/EPL_Pred/epl_predictor_api/match_predictor_xgb.pkl')
 
 # Flask app
 app = Flask(__name__)
