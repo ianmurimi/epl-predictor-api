@@ -1,5 +1,4 @@
-flask
-xgboost
-numpy
-joblib
 scikit-learn
+xgboost
+flask
+numpy
