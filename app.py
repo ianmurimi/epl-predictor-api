@@ -1,9 +1,12 @@
 from flask import Flask, request, jsonify
 import joblib
 import numpy as np
+import os
+import xgboost as xgb
 
 # Load trained model
-model = joblib.load('match_predictor_xgb.pkl')
+model = xgb.XGBClassifier()
+model.load_model("match_predictor_xgb.json")
 
 # Flask app
 app = Flask(__name__)
@@ -16,13 +19,12 @@ label_map = {0: 'Home Win', 1: 'Draw', 2: 'Away Win'}
 def index():
     return "Football Match Predictor API is running."
 
-
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
         data = request.get_json()
+        print(f"Received data: {data}", flush=True)
 
-        # Extract features in the correct order
         features = [
             data['home_form_goals'],
             data['away_form_goals'],
@@ -33,8 +35,12 @@ def predict():
         ]
 
         input_array = np.array(features).reshape(1, -1)
+        print(f"Input array: {input_array}", flush=True)
+
         prediction = model.predict(input_array)[0]
         probabilities = model.predict_proba(input_array)[0]
+
+        print(f"Prediction: {prediction}, Probabilities: {probabilities}", flush=True)
 
         return jsonify({
             'prediction': label_map[prediction],
@@ -46,10 +52,11 @@ def predict():
         })
 
     except Exception as e:
+        print(f"Error during prediction: {str(e)}", flush=True)
         return jsonify({'error': str(e)}), 400
 
 
 if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 5000))  # Render sets PORT env var
     print("⚽ Starting Flask app...")
-    app.run(host='0.0.0.0', port=port, debug=True)
+    port = int(os.environ.get("PORT", 5050))  # For Render
+    app.run(host='0.0.0.0', port=port)
