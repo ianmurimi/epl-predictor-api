@@ -2,3 +2,5 @@ scikit-learn
 xgboost
 flask
 numpy
+streamlit
+requests
