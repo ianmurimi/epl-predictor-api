@@ -6,6 +6,8 @@ def fetch_latest_results():
     response = requests.get(url)
     soup = BeautifulSoup(response.text, "html.parser")
 
+    print(soup.prettify())
+
     # Example logic: You'll need to adjust based on structure
     results = []
     for match in soup.select('.scoreboard'):
