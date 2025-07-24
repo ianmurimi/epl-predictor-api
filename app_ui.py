@@ -7,7 +7,8 @@ home_team = st.text_input("Home Team", value="Arsenal")
 away_team = st.text_input("Away Team", value="Chelsea")
 
 if st.button("Predict"):
-    url = "https://epl-predictor-api.onrender.com/predict_match"
+    #url = "https://epl-predictor-api.onrender.com/predict_match"
+    url = "https://epl-predictor-api.onrender.com/predict"
     payload = {
         "home_team": home_team,
         "away_team": away_team
