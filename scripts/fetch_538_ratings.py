@@ -2,7 +2,7 @@ import requests
 import csv
 from io import StringIO
 from datetime import datetime
-from db.db_connection import get_connection
+from db_connection import get_connection
 
 # Constants
 CSV_URL = "https://projects.fivethirtyeight.com/soccer-predictions/data/spi_global_rankings.csv"
