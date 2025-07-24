@@ -11,6 +11,7 @@ HEADERS = {"X-Auth-Token": API_TOKEN}
 def fetch_epl_matches():
     response = requests.get(API_URL, headers=HEADERS)
     data = response.json()
+    print(data)
     matches = []
 
     for match in data["matches"]:
