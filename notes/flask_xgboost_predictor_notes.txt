@@ -1,0 +1,87 @@
+
+Flask XGBoost Predictor Deployment – Reference Notes
+====================================================
+
+1. Project Setup (Local)
+------------------------
+# Create a virtual environment to isolate dependencies
+python -m venv .venv
+
+# Activate the virtual environment (Mac/Linux)
+source .venv/bin/activate
+
+2. Install Dependencies
+------------------------
+# Install required libraries for the project
+pip install flask numpy scikit-learn xgboost joblib
+
+3. Create Requirements File
+---------------------------
+# Freeze and export current dependencies to a file (required for Render deployment)
+pip freeze > requirements.txt
+
+4. Ensure Model File is Included
+-------------------------------
+# Move the trained model file to your project root folder (Render can only access what's tracked in Git)
+mv /path/to/match_predictor_xgb.json epl_predictor_api/
+
+# Track the model file in Git
+git add match_predictor_xgb.json
+git commit -m "Add XGBoost model file"
+git push
+
+5. Running Flask App Locally
+----------------------------
+# Run the Flask app locally on the default port (5050)
+python app.py
+
+# If port 5050 is already used, find and kill the process using it:
+lsof -i:5050          # Lists the process ID using port 5050
+kill -9 <PID>         # Force kill the process occupying the port
+
+6. Test API Locally with curl
+-----------------------------
+# Send a sample POST request to the /predict endpoint to check if the model is working locally
+curl -X POST http://127.0.0.1:5050/predict \
+     -H "Content-Type: application/json" \
+     -d '{"home_form_goals":1.5,"away_form_goals":1.2,"home_win_rate":0.6,"away_win_rate":0.4,"elo_home":1450,"elo_away":1380}'
+
+7. Common Render Deployment Fixes
+----------------------------------
+
+❗ Fix: 'os' not defined
+# Flask needs the PORT environment variable from Render, so ensure this is imported:
+import os
+
+❗ Fix: match_predictor_xgb.json not found
+# Render only deploys files tracked by Git. Make sure you:
+git add match_predictor_xgb.json
+git commit -m "Add model for Render deployment"
+git push
+
+8. Model Serialization Warning (Optional Fix)
+---------------------------------------------
+# If you see a warning like:
+# WARNING: loading a serialized model... from older version of XGBoost
+# You can re-save the model using the Booster API (better compatibility):
+booster = model.get_booster()
+booster.save_model("match_predictor_xgb.json")
+
+9. Debugging Deployment on Render
+---------------------------------
+# Always check Render logs for clear errors like:
+==> Running 'python app.py'
+Traceback: ...
+NameError: name 'os' is not defined
+
+# Or:
+xgboost.core.XGBoostError: Opening match_predictor_xgb.json failed: No such file or directory
+
+# These point to either missing imports or files not committed to Git.
+
+10. Sample Flask Entrypoint Snippet
+-----------------------------------
+if __name__ == '__main__':
+    print("⚽ Starting Flask app...")
+    port = int(os.environ.get("PORT", 5050))  # 5050 for local, dynamic for Render
+    app.run(host='0.0.0.0', port=port)
