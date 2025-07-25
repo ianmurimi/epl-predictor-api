@@ -5,8 +5,10 @@ import xgboost as xgb
 import psycopg2
 
 # Load the XGBoost model
+MODEL_PATH = os.path.join(os.path.dirname(__file__), '..', 'models', 'match_predictor_xgb.json')
 model = xgb.XGBClassifier()
-model.load_model("match_predictor_xgb.json")
+model.load_model(MODEL_PATH)
+#model.load_model("match_predictor_xgb.json")
 
 # Inverse label map
 label_map = {0: 'Home Win', 1: 'Draw', 2: 'Away Win'}
