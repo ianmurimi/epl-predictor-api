@@ -6,7 +6,7 @@ import pandas as pd
 import os
 
 WAYBACK_URL = "https://web.archive.org/web/20240515013703/https://clubelo.com/ENG"
-OUTPUT_PATH = "/Users/ianmurimi/Documents/Practice/ML/EPL_Pred/epl_predictor_api/data/elo_snapshot_2024.csv"
+OUTPUT_PATH = "data/elo_snapshot_2024.csv"
 
 
 def scrape_clubelo_snapshot():
