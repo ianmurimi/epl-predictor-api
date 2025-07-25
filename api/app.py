@@ -3,6 +3,9 @@ import numpy as np
 import os
 import xgboost as xgb
 import psycopg2
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Load the XGBoost model
 MODEL_PATH = os.path.join(os.path.dirname(__file__), '..', 'models', 'match_predictor_xgb.json')
@@ -17,6 +20,10 @@ label_map = {0: 'Home Win', 1: 'Draw', 2: 'Away Win'}
 app = Flask(__name__)
 
 # Root endpoint for test
+
+@app.route("/")
+def home():
+    return "⚽ EPL Predictor API is running!"
 @app.route('/')
 def index():
     return "Football Match Predictor API is running."
