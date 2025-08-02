@@ -3,7 +3,7 @@ services:
     name: epl-predictor-api
     env: python
     buildCommand: pip install -r requirements.txt
-    startCommand: python backend_api/app.py
+    startCommand: python api/app.py
     envVars:
       - key: DATABASE_URL
-        value: postgres://epl_user:Ianvl.2392@epl-predictor-db.internal:5432/epl_prediction_db
+        value: postgresql://epl_user:HVEZk2fc1bZpL8ftpgttbGKbO85aKxaW@dpg-d276mc8gjchc73feh5jg-a/epl_prediction_db
