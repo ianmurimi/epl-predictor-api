@@ -6,4 +6,4 @@ services:
     startCommand: python api/app.py
     envVars:
       - key: DATABASE_URL
-        value: postgresql://epl_user:HVEZk2fc1bZpL8ftpgttbGKbO85aKxaW@dpg-d276mc8gjchc73feh5jg-a/epl_prediction_db
+        value: postgresql://epl_user:HVEZk2fc1bZpL8ftpgttbGKbO85aKxaW@dpg-d276mc8gjchc73feh5jg-a.oregon-postgres.render.com/epl_prediction_db
