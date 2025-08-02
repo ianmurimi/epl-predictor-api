@@ -66,19 +66,8 @@ def get_team_stats(team_name):
     if not db_url:
         raise ValueError("DATABASE_URL not set in environment variables")
 
-    #result = urlparse(db_url)
-    """conn = psycopg2.connect(
-        dbname=result.path[1:],
-        user=result.username,
-        password=result.password,
-        host=result.hostname,
-        port=result.port
-    )"""
-
-    conn = psycopg2.connect(os.environ["DATABASE_URL"])
-    if not conn_str:
-        raise ValueError("DATABASE_URL environment variable is not set")
-    conn = psycopg2.connect(conn_str)
+    # Directly connect using the full DATABASE_URL
+    conn = psycopg2.connect(db_url)
 
     cur = conn.cursor()
     cur.execute("""
