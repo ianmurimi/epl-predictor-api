@@ -4,6 +4,7 @@ import os
 import xgboost as xgb
 import psycopg2
 from dotenv import load_dotenv
+from urllib.parse import urlparse
 
 load_dotenv()
 
@@ -60,20 +61,28 @@ def predict():
 
 # Function to get team stats from PostgreSQL
 def get_team_stats(team_name):
-    """Query team stats from the PostgreSQL DB"""
+    """Query team stats from the PostgreSQL DB using DATABASE_URL"""
+    db_url = os.getenv("DATABASE_URL")
+    if not db_url:
+        raise ValueError("DATABASE_URL not set in environment variables")
+
+    result = urlparse(db_url)
+
     conn = psycopg2.connect(
-        dbname="epl_prediction_db",
-        user="epl_user",
-        password="Ianvl.2392",
-        host="localhost",
-        port="5432"
+        dbname=result.path[1:],
+        user=result.username,
+        password=result.password,
+        host=result.hostname,
+        port=result.port
     )
+
     cur = conn.cursor()
     cur.execute("""
         SELECT form_goals, win_rate, elo_rating FROM team_stats WHERE team_name = %s
     """, (team_name,))
     result = cur.fetchone()
     conn.close()
+
     if result:
         return {
             "form_goals": result[0],
