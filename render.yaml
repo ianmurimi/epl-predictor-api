@@ -2,9 +2,8 @@ services:
   - type: web
     name: epl-predictor-api
     env: python
-    runtime: python
     buildCommand: pip install -r requirements.txt
-    startCommand: python api/app.py
+    startCommand: python backend_api/app.py
     envVars:
-      - key: RUNTIME_VERSION
-        value: python-3.11.8
+      - key: DATABASE_URL
+        value: postgres://epl_user:Ianvl.2392@epl-predictor-db.internal:5432/epl_prediction_db
