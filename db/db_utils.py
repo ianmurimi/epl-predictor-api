@@ -2,6 +2,16 @@
 from db import SessionLocal
 from models import Team, Fixture
 from sqlalchemy.exc import NoResultFound
+import psycopg2, os
+
+def get_connection():
+    return psycopg2.connect(
+        dbname=os.environ.get("DB_NAME","epl_prediction_db"),
+        user=os.environ.get("DB_USER","epl_user"),
+        password=os.environ.get("DB_PASS","password"),
+        host=os.environ.get("DB_HOST","localhost"),
+        port=os.environ.get("DB_PORT","5432"),
+    )
 
 def get_elo(team_name):
     db = SessionLocal()
