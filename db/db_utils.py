@@ -1,6 +1,8 @@
 # db/db_utils.py
 from datetime import date
-from typing import List, Tuple, Dict
+from typing import List, Tuple, Dict, Iterable
+
+Key = Tuple[date, str, str]
 
 import os
 import psycopg2
@@ -76,10 +78,10 @@ def get_latest_elos() -> Dict[str, float]:
     finally:
         db.close()
 
-def get_unprocessed_fixtures() -> List[Tuple[date, str, str, int, int, str, int]]:
+def get_unprocessed_fixtures() -> List[Tuple[date, str, str, int, int, str]]:
     """
-    Return unprocessed finished fixtures as:
-    (match_date, home_team, away_team, home_goals, away_goals, result, id)
+    Returns list of:
+      (match_date, home_team, away_team, home_goals, away_goals, result)
     """
     db = SessionLocal()
     try:
@@ -88,21 +90,32 @@ def get_unprocessed_fixtures() -> List[Tuple[date, str, str, int, int, str, int]
             .filter(Fixture.processed.is_(False))
             .order_by(Fixture.match_date.asc(), Fixture.home_team.asc(), Fixture.away_team.asc())
         )
-        rows: List[Tuple[date, str, str, int, int, str, int]] = []
+        rows: List[Tuple[date, str, str, int, int, str]] = []
         for f in q.all():
             result = "H" if f.home_goals > f.away_goals else "A" if f.away_goals > f.home_goals else "D"
-            rows.append((f.match_date, f.home_team, f.away_team, f.home_goals, f.away_goals, result, f.id))
+            rows.append((f.match_date, f.home_team, f.away_team, f.home_goals, f.away_goals, result))
         return rows
     finally:
         db.close()
 
-def mark_fixtures_processed(ids: List[int]) -> None:
-    """Set processed = TRUE for the given Fixture IDs."""
-    if not ids:
+def mark_fixtures_processed_by_keys(keys: Iterable[Key]) -> None:
+    """
+    Mark processed = TRUE using composite key (match_date, home_team, away_team).
+    """
+    keys = list(keys)
+    if not keys:
         return
     db = SessionLocal()
     try:
-        db.query(Fixture).filter(Fixture.id.in_(ids)).update({"processed": True}, synchronize_session=False)
+        # Looping is simplest & clear; number of unprocessed items is usually small
+        for mdate, home, away in keys:
+            (db.query(Fixture)
+               .filter(
+                    Fixture.match_date == mdate,
+                    Fixture.home_team == home,
+                    Fixture.away_team == away,
+               )
+               .update({"processed": True}, synchronize_session=False))
         db.commit()
     finally:
         db.close()
