@@ -28,7 +28,8 @@ api_token = os.getenv("FOOTBALL_DATA_API_TOKEN")  # <-- use the proper env var n
 if api_token:
     try:
         r = requests.get(
-            "https://api.football-data.org/v4/status",
+                "https://api.football-data.org/v4/competitions/PL",
+            #"https://api.football-data.org/v4/status",
             headers={"X-Auth-Token": api_token},
             timeout=10,
         )
