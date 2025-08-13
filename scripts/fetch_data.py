@@ -1,22 +1,18 @@
+# scripts/fetch_data.py
 import os
 import time
 from datetime import datetime
 from typing import Optional, List, Dict, Any
 import requests
 
-from db.db_utils import save_fixture 
+from db.db_utils import save_fixture  # ORM helper that writes a row
 
 API_TOKEN = os.getenv("FOOTBALL_DATA_API_TOKEN")
-#API_URL = "https://api.football-data.org/v4/competitions/PL/matches?season=2023"
 BASE_URL = "https://api.football-data.org/v4"
 HEADERS = {"X-Auth-Token": API_TOKEN}
 
-# Type: (date, home, away, hg, ag, result)
-MatchRow = Tuple[datetime, str, str, int, int, str]
-
 def _normalize_team(name: str) -> str:
-    """Keep names consistent. we can adjust this map if needed."""
-    name = name.replace("FC ", "").replace("AFC ", "").strip()
+    """Keep names consistent. Adjust this map as needed."""
     mapping = {
         "Manchester United FC": "Manchester United",
         "Manchester City FC": "Manchester City",
@@ -35,11 +31,10 @@ def _normalize_team(name: str) -> str:
         "Liverpool FC": "Liverpool",
         "Everton FC": "Everton",
         "Aston Villa FC": "Aston Villa",
-        "Bournemouth": "AFC Bournemouth",
         "AFC Bournemouth": "Bournemouth",
-        # add more as they appear
+        "Bournemouth": "AFC Bournemouth",
     }
-    return mapping.get(name, name)
+    return mapping.get(name.strip(), name.strip())
 
 def fetch_finished_epl_matches(
     season: Optional[int] = None,
@@ -47,14 +42,8 @@ def fetch_finished_epl_matches(
     date_to: Optional[str] = None,    # "YYYY-MM-DD"
     retry: int = 2,
     backoff: float = 1.5,
-) -> List[MatchRow]:
-    """
-    Pull finished EPL matches from Football-Data.org.
-
-    Args:
-        season: e.g., 2024 for 2024/25 season. If None, API returns current.
-        date_from/date_to: optional bounding; if provided, API filters by UTC date.
-    """
+) -> List[Dict[str, Any]]:
+    """Pull finished EPL matches from Football-Data.org and return rows for save_fixture()."""
     if not API_TOKEN:
         raise RuntimeError("FOOTBALL_DATA_API_TOKEN is not set in your environment.")
 
@@ -72,72 +61,55 @@ def fetch_finished_epl_matches(
         if resp.status_code == 200:
             break
         if attempt == retry:
-            raise RuntimeError(f"Football-Data API error {resp.status_code}: {resp.text}")
+            raise RuntimeError(f"Football-Data API error {resp.status_code}: {resp.text[:200]}")
         time.sleep(backoff ** attempt)
 
     data = resp.json()
-    raw_matches = data.get("matches", [])
-    rows: List[MatchRow] = []
+    rows: List[Dict[str, Any]] = []
 
-    for m in raw_matches:
-        # Defensive parsing
+    for m in data.get("matches", []):
         if m.get("status") != "FINISHED":
             continue
 
-        score = m.get("score", {})
+        score = m.get("score", {}) or {}
         full = score.get("fullTime", {}) or {}
         hg = full.get("home")
         ag = full.get("away")
         if hg is None or ag is None:
-            # Sometimes missing; skip or fall back to halfTime/regularTime if you want
             continue
 
-        home = _normalize_team(m.get("homeTeam", {}).get("name", "").strip())
-        away = _normalize_team(m.get("awayTeam", {}).get("name", "").strip())
+        home = _normalize_team((m.get("homeTeam", {}) or {}).get("name", ""))
+        away = _normalize_team((m.get("awayTeam", {}) or {}).get("name", ""))
         if not home or not away:
             continue
 
-        # utcDate like "2024-08-13T19:00:00Z"
         utc = m.get("utcDate")
         if not utc:
             continue
         match_date = datetime.strptime(utc, "%Y-%m-%dT%H:%M:%SZ").date()
 
         result = "H" if hg > ag else "A" if ag > hg else "D"
-        rows.append((match_date, home, away, int(hg), int(ag), result))
+        rows.append({
+            "match_date": match_date,
+            "home_team": home,
+            "away_team": away,
+            "home_goals": int(hg),
+            "away_goals": int(ag),
+            "result": result,
+            "processed": False,
+        })
 
     return rows
 
-def insert_matches_to_db(matches: List[MatchRow]) -> int:
-    """
-    Batch insert with ON CONFLICT do-nothing.
-    Requires a UNIQUE index on (match_date, home_team, away_team), e.g.:
-
-        CREATE UNIQUE INDEX IF NOT EXISTS ux_match_unique
-          ON match_results(match_date, home_team, away_team);
-    """
-    if not matches:
-        print("No matches to insert.")
-        return 0
-
-    conn = get_connection()
-    try:
-        with conn, conn.cursor() as cur:
-            psycopg2.extras.execute_values(
-                cur,
-                """
-                INSERT INTO match_results
-                    (match_date, home_team, away_team, home_goals, away_goals, result, processed)
-                VALUES %s
-                ON CONFLICT (match_date, home_team, away_team) DO NOTHING
-                """,
-                matches,
-            )
-        print(f"✅ Inserted {len(matches)} finished EPL matches.")
-        return len(matches)
-    finally:
-        conn.close()
+def insert_matches(rows: List[Dict[str, Any]]) -> int:
+    """Insert via ORM helper into match_results."""
+    inserted = 0
+    for r in rows:
+        save_fixture(r)
+        inserted += 1
+    print(f"✅ Inserted {inserted} finished EPL matches.")
+    return inserted
 
 if __name__ == "__main__":
-    rows = fetch_finished_epl_matches(season=None)
-    insert_matches_to_db(rows)
+    payload = fetch_finished_epl_matches()
+    insert_matches(payload)
