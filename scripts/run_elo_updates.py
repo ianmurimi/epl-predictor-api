@@ -6,7 +6,7 @@ from typing import Dict
 from db.db_utils import (
     get_latest_elos,
     get_unprocessed_fixtures,
-    mark_fixtures_processed,
+    mark_fixtures_processed_by_keys,
     upsert_team_elo,
 )
 
@@ -55,20 +55,20 @@ def main():
     elo.ratings.update(latest)
 
     # 2) get unprocessed fixtures
-    fixtures = get_unprocessed_fixtures()  # [(date, home, away, hg, ag, result, id), ...]
+    fixtures = get_unprocessed_fixtures()  # (mdate, home, away, hg, ag, result)
     if not fixtures:
         print("No unprocessed fixtures.")
         return
 
-    processed_ids = []
-    for mdate, home, away, hg, ag, result, fid in fixtures:
+    processed_keys = []
+    for mdate, home, away, hg, ag, result in fixtures:
         new_home, new_away = elo.update_pair(home, away, hg, ag)
         upsert_team_elo(home, new_home)
         upsert_team_elo(away, new_away)
-        processed_ids.append(fid)
+        processed_keys.append((mdate, home, away))
 
-    mark_fixtures_processed(processed_ids)
-    print(f"✅ Processed {len(processed_ids)} fixtures and updated team Elo.")
+    mark_fixtures_processed_by_keys(processed_keys)
+    print(f"✅ Processed {len(processed_keys)} fixtures and updated team Elo.")
 
 if __name__ == "__main__":
     main()
