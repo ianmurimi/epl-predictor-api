@@ -2,6 +2,7 @@
 import os
 import requests
 from dotenv import load_dotenv
+from sqlalchemy import text
 
 # Load .env into environment
 load_dotenv()
@@ -17,13 +18,13 @@ print("FOOTBALL_DATA_API_TOKEN:", "SET" if os.getenv("FOOTBALL_DATA_API_TOKEN") 
 try:
     from db import engine
     with engine.connect() as conn:
-        conn.execute("SELECT 1;")
+        conn.execute(text("SELECT 1"))
     print("✅ DB connection OK")
 except Exception as e:
     print(f"❌ DB connection failed: {e}")
 
 # --- API connectivity check ---
-api_token = os.getenv("FOOTBALL_DATA_API_TOKEN")
+api_token = os.getenv("FOOTBALL_DATA_API_TOKEN")  # <-- use the proper env var name
 if api_token:
     try:
         r = requests.get(
