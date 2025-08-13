@@ -1,12 +1,9 @@
-from db import get_connection
-import requests
-from datetime import datetime
 import os
 import time
-from typing import List, Tuple, Optional
-import psycopg2.extras
+from datetime import datetime
+from typing import Optional, List, Dict, Any
+import requests
 from db_utils import save_fixture
-
 
 API_TOKEN = os.getenv("FOOTBALL_DATA_API_TOKEN")
 #API_URL = "https://api.football-data.org/v4/competitions/PL/matches?season=2023"
