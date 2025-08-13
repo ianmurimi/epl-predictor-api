@@ -1,16 +1,10 @@
 import os
 import time
 from datetime import datetime
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Tuple
 import requests
 
-# --- robust import of save_fixture from project root ---
-try:
-    from db_utils import save_fixture  # when running from project root
-except ModuleNotFoundError:
-    import sys
-    sys.path.append(os.path.dirname(os.path.dirname(__file__)))  # add project root
-    from db_utils import save_fixture
+from db.db_utils import save_fixture
 
 API_TOKEN = os.getenv("FOOTBALL_DATA_API_TOKEN")
 #API_URL = "https://api.football-data.org/v4/competitions/PL/matches?season=2023"
