@@ -10,6 +10,13 @@ or:
   python scripts/run_pipeline.py
 """
 
+# scripts/run_pipeline.py
+import os
+from dotenv import load_dotenv
+
+# Always load .env from the project root
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '..', '.env'))
+
 def _import_fetch():
     try:
         # when run as module: python -m scripts.run_pipeline
