@@ -5,6 +5,7 @@ import os
 import time
 from typing import List, Tuple, Optional
 import psycopg2.extras
+from db_utils import save_fixture
 
 
 API_TOKEN = os.getenv("b30c72d9184e4fc8b3d6d3600a16df42")
