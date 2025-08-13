@@ -8,9 +8,9 @@ import psycopg2.extras
 from db_utils import save_fixture
 
 
-API_TOKEN = os.getenv("b30c72d9184e4fc8b3d6d3600a16df42")
+API_TOKEN = os.getenv("FOOTBALL_DATA_API_TOKEN")
 #API_URL = "https://api.football-data.org/v4/competitions/PL/matches?season=2023"
-BASE_URL = "https://api.football-data.org/v4/matches"
+BASE_URL = "https://api.football-data.org/v4"
 HEADERS = {"X-Auth-Token": API_TOKEN}
 
 # Type: (date, home, away, hg, ag, result)
